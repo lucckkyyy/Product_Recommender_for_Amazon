@@ -1,0 +1,111 @@
+{
+  "title": "Amazon Recommender — API Observability",
+  "uid": "amazon-recommender",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(http_requests_total{job=\"amazon-recommender-api\"}[1m])",
+          "legendFormat": "{{method}} {{handler}} {{status_code}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Error Rate (%)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "100 * rate(http_requests_total{job=\"amazon-recommender-api\",status_code=~\"5..\"}[1m]) / rate(http_requests_total{job=\"amazon-recommender-api\"}[1m])",
+          "legendFormat": "5xx Error %"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "API Latency — p50 / p95 / p99 (s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"amazon-recommender-api\"}[1m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"amazon-recommender-api\"}[1m]))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job=\"amazon-recommender-api\"}[1m]))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "LLM First Token Latency — p50 / p95 (s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(llm_latency_seconds_bucket[1m]))",
+          "legendFormat": "p50 TTFT"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(llm_latency_seconds_bucket[1m]))",
+          "legendFormat": "p95 TTFT"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Chat Requests — Success vs Error",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(chat_requests_total{status=\"success\"})",
+          "legendFormat": "Success"
+        },
+        {
+          "expr": "sum(chat_requests_total{status=\"error\"})",
+          "legendFormat": "Error"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Retrieval Latency — p95 (s)",
+      "type": "gauge",
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(retrieval_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95 Retrieval"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 5,
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 3 }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

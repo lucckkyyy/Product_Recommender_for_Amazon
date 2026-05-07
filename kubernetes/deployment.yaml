@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: amazon-recommender
+  namespace: production
+  labels:
+    app: amazon-recommender
+    version: "1.0.0"
+spec:
+  replicas: 1   # use 1 for Minikube; increase when deploying to real cluster
+  selector:
+    matchLabels:
+      app: amazon-recommender
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0          # zero-downtime deployments
+  template:
+    metadata:
+      labels:
+        app: amazon-recommender
+        version: "1.0.0"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: amazon-recommender-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      containers:
+        - name: api
+          image: amazon-recommender:latest   # built locally with: eval $(minikube docker-env) && docker build -t amazon-recommender:latest .
+          imagePullPolicy: IfNotPresent      # use local image, don't try to pull from registry
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - secretRef:
+                name: amazon-recommender-secrets
+            - configMapRef:
+                name: amazon-recommender-config
+
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+
+          # ── Probes ─────────────────────────────────────────────────────
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 45
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 3
+
+          # ── Graceful shutdown ──────────────────────────────────────────
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "5"]
+
+      terminationGracePeriodSeconds: 30
+
+      # Spread pods across nodes for HA
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: amazon-recommender

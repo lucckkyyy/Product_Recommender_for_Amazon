@@ -64,7 +64,7 @@ I created this project to strengthen my understanding of Retrieval-Augmented Gen
 
 ## 🚀 The Learning Outcome
 
-This project strengthened my ability to architect and deploy a full production ML system — from raw data ingestion and vector embedding, to LLM inference and live monitoring. It reflects my growing confidence in MLOps, API engineering, and building AI-powered applications that go beyond notebooks into real deployable systems.
+This project strengthened my ability to architect and deploy a full production ML system from raw data ingestion and vector embedding, to LLM inference and live monitoring. It reflects my growing confidence in MLOps, API engineering, and building AI-powered applications that go beyond notebooks into real deployable systems.
 
 ---
 *Author: Aryan Rajguru*

@@ -44,7 +44,7 @@ I created this project to strengthen my understanding of Retrieval-Augmented Gen
 ## ⚡ Technical Stack
 
 ### **What I Built With**
-- **LLM**: Groq — llama-3.1-8b-instant
+- **LLM**: Groq - llama-3.1-8b-instant
 - **RAG Framework**: LangChain
 - **Embeddings**: HuggingFace all-MiniLM-L6-v2 (local, no API cost)
 - **Vector Store**: DataStax Astra DB (free 5GB tier)
